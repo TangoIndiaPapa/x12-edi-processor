@@ -142,3 +142,29 @@ data/output/*
 # AWS SAM
 .aws-sam/
 samconfig.toml
+# Lambda deployment
+lambda/lambda_function.zip
+lambda/package/
+lambda/verify_*/
+lambda/check_*/
+lambda/temp_*/
+lambda/deployed.zip
+lambda/test_copy.py
+
+# Virtual environments
+venv*/
+.venv*/
+
+# Test outputs and temporary files
+output_*.json
+payload.json
+response.json
+backup_*.x12
+test_manual.py
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars

@@ -1,0 +1,34 @@
+# Terraform files to exclude from git
+
+# State files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Variable files with sensitive data
+terraform.tfvars
+*.auto.tfvars
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Lock files
+.terraform.lock.hcl
+
+# Terraform directory
+.terraform/
+
+# Plan files
+*.tfplan
+
+# Lambda deployment packages
+lambda_function.zip
+lambda_layer.zip
+
+# Environment-specific configs (keep examples)
+!terraform.tfvars.example
+
+# CLI configuration files
+.terraformrc
+terraform.rc

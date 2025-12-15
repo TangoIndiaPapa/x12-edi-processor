@@ -1,0 +1,77 @@
+# ============================================================================
+# Terraform Variables - Example Configuration
+# ============================================================================
+# Copy this file to terraform.tfvars and customize for your environment.
+# terraform.tfvars is git-ignored to protect sensitive values.
+#
+# Usage:
+#   cp terraform.tfvars.example terraform.tfvars
+#   # Edit terraform.tfvars with your values
+#   terraform apply
+# ============================================================================
+
+# ============================================================================
+# General Configuration
+# ============================================================================
+
+project_name = "x12-edi-processor"
+environment  = "dev"  # Options: dev, staging, production
+aws_region   = "us-east-1"
+
+# ============================================================================
+# Lambda Configuration
+# ============================================================================
+
+lambda_function_name       = "x12-edi-processor"
+lambda_runtime            = "python3.12"
+lambda_timeout            = 300  # 5 minutes
+lambda_memory_size        = 512  # MB
+lambda_reserved_concurrency = -1  # -1 = unreserved
+
+# ============================================================================
+# Application Settings
+# ============================================================================
+
+log_level         = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+max_file_size_mb  = 50
+enable_validation = true
+strict_mode       = false  # Set to true to fail on validation errors
+
+# ============================================================================
+# Storage Settings
+# ============================================================================
+
+file_retention_days = 365  # Keep files for 1 year
+
+# ============================================================================
+# Monitoring Settings
+# ============================================================================
+
+log_retention_days  = 30  # CloudWatch log retention
+enable_xray_tracing = true
+
+# ============================================================================
+# Reliability Settings
+# ============================================================================
+
+enable_dlq = true  # Enable Dead Letter Queue for failed invocations
+
+# ============================================================================
+# Network Settings (Optional)
+# ============================================================================
+
+enable_vpc = false
+# If enable_vpc = true, configure these:
+# vpc_id             = "vpc-xxxxx"
+# subnet_ids         = ["subnet-xxxxx", "subnet-yyyyy"]
+# security_group_ids = ["sg-xxxxx"]
+
+# ============================================================================
+# Additional Tags (Optional)
+# ============================================================================
+
+additional_tags = {
+  CostCenter  = "Engineering"
+  Owner       = "Platform Team"
+  Compliance  = "HIPAA"
+}

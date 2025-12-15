@@ -82,8 +82,21 @@ class S3Input(BaseInput):
             
             logger.info(f"Reading S3 object: s3://{self.bucket}/{self.key}")
             
+            # Fetch object from S3 and decode to UTF-8 string
             response = self.s3_client.get_object(Bucket=self.bucket, Key=self.key)
             content = response['Body'].read().decode('utf-8')
+            
+            # CRITICAL: Normalize line endings to Unix style (\n) for X12 parsing
+            # Issue: Windows files uploaded to S3 have \r\n line endings
+            # LinuxForHealth X12 parser is sensitive to line ending format and fails
+            # with Windows line endings, even though X12 standard uses segment
+            # terminators (~) not line breaks. This normalization ensures consistent
+            # parsing regardless of the source file's line ending format.
+            # Order matters: replace \r\n first, then \r to handle all cases:
+            # - Windows (\r\n) → \n
+            # - Old Mac (\r) → \n  
+            # - Unix (\n) → \n (unchanged)
+            content = content.replace('\r\n', '\n').replace('\r', '\n')
             
             logger.info(
                 f"Successfully read {len(content)} characters from s3://{self.bucket}/{self.key}"
