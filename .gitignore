@@ -1,6 +1,9 @@
 # Sensitive documentation files
 LAMBDA_LAYER_IMPLEMENTATION.md
 
+# Instructional/internal documentation
+prompts/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
