@@ -1,0 +1,96 @@
+"""AWS Lambda deployment template (SAM)."""
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: X12 EDI Processing Lambda Function
+
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 1024
+    Runtime: python3.10
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
+        AWS_S3_BUCKET: !Ref S3Bucket
+        LOG_LEVEL: INFO
+        ENABLE_VALIDATION: 'true'
+        POWERTOOLS_SERVICE_NAME: x12-edi-processor
+        POWERTOOLS_LOG_LEVEL: INFO
+
+Parameters:
+  Environment:
+    Type: String
+    Default: development
+    AllowedValues:
+      - development
+      - staging
+      - production
+  
+  S3Bucket:
+    Type: String
+    Description: S3 bucket for X12 files
+    Default: x12-edi-bucket
+
+Resources:
+  X12ProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub x12-edi-processor-${Environment}
+      CodeUri: ../
+      Handler: src.handlers.lambda_handler.lambda_handler
+      Description: Process X12 277 and 835 EDI documents
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref S3Bucket
+        - S3WritePolicy:
+            BucketName: !Ref S3Bucket
+      Events:
+        S3Upload:
+          Type: S3
+          Properties:
+            Bucket: !Ref X12InputBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: input/
+                  - Name: suffix
+                    Value: .x12
+
+  X12InputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3Bucket
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldFiles
+            Status: Enabled
+            ExpirationInDays: 90
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  X12ProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/x12-edi-processor-${Environment}
+      RetentionInDays: 30
+
+Outputs:
+  X12ProcessorFunctionArn:
+    Description: X12 Processor Lambda Function ARN
+    Value: !GetAtt X12ProcessorFunction.Arn
+  
+  X12ProcessorFunctionName:
+    Description: X12 Processor Lambda Function Name
+    Value: !Ref X12ProcessorFunction
+  
+  S3BucketName:
+    Description: S3 Bucket for X12 files
+    Value: !Ref X12InputBucket

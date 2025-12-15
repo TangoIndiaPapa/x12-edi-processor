@@ -1,0 +1,25 @@
+# X12 EDI Parsing Libraries
+linuxforhealth-x12==0.57.0
+# Note: This version requires pydantic v1.x
+
+# AWS SDK
+boto3>=1.35.0
+
+# Data Validation & Models (v1.x for compatibility with linuxforhealth-x12)
+pydantic>=1.10,<2.0
+python-dotenv>=1.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.23.0
+moto>=4.2.0
+
+# Development
+black>=23.0.0
+flake8>=7.0.0
+isort>=5.13.0
+
+# AWS Lambda
+aws-lambda-powertools>=2.31.0
+mangum>=0.17.0
