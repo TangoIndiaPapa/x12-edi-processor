@@ -21,6 +21,7 @@ from src.core.exceptions import X12ProcessingError
 from src.input.local_input import LocalInput
 from src.input.s3_input import S3Input
 from src.parsers.x12_277_parser import X12_277_Parser
+from src.parsers.x12_277ca_parser import X12_277CA_Parser
 from src.parsers.x12_835_parser import X12_835_Parser
 
 # Initialize module-level instances
@@ -41,7 +42,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         "bucket": "bucket-name",  # For S3 source
         "key": "path/to/file",    # For S3 source
         "file_path": "/path",     # For local source
-        "transaction_type": "277" | "835",
+        "transaction_type": "277" | "277CA" | "835",
         "output_destination": "s3" | "local",
         "output_bucket": "bucket", # For S3 output
         "output_prefix": "prefix/", # For S3 output
@@ -192,14 +193,19 @@ def _detect_transaction_type(x12_content: str) -> str:
     Auto-detect X12 transaction type from the ST (Transaction Set Header) segment.
     
     The ST segment is the first segment in each transaction set and contains
-    the transaction set identifier code (e.g., 277 for Claim Status, 835 for Payment).
+    the transaction set identifier code (e.g., 277 for Claim Status/Acknowledgment, 835 for Payment).
+    
     Format: ST*{transaction_code}*{control_number}*{version}~
+    
+    For 277 transactions, we differentiate based on version:
+    - 005010X214: 277CA (Claim Acknowledgment - rejections)
+    - 005010X212: 277 (Claim Status - status inquiries)
     
     Args:
         x12_content: Raw X12 EDI content
         
     Returns:
-        str: Transaction type code (e.g., "277", "835") or "unknown" if not found
+        str: Transaction type code (e.g., "277CA", "277", "835") or "unknown" if not found
     """
     # Split on segment terminator (~) to process each segment
     lines = x12_content.split('~')
@@ -207,11 +213,20 @@ def _detect_transaction_type(x12_content: str) -> str:
     # Find the ST segment which identifies the transaction type
     for line in lines:
         if line.strip().startswith('ST'):
-            # Split on element separator (*) to extract transaction code
+            # Split on element separator (*) to extract transaction code and version
             elements = line.split('*')
             if len(elements) >= 2:
                 # Second element (index 1) is the transaction set identifier
-                return elements[1]
+                transaction_code = elements[1]
+                
+                # For 277, check version to determine if it's CA (Acknowledgment) or CS (Status)
+                if transaction_code == "277" and len(elements) >= 4:
+                    version = elements[3]
+                    if "X214" in version:  # 005010X214 = Claim Acknowledgment
+                        return "277CA"
+                    # else fall through to return "277" (Status)
+                
+                return transaction_code
     
     return "unknown"
 
@@ -221,11 +236,12 @@ def _get_parser(transaction_type: str):
     Factory function to instantiate the appropriate X12 parser based on transaction type.
     
     Supported transaction types:
-    - 277: Health Care Claim Status Notification
-    - 835: Health Care Claim Payment/Advice
+    - 277: Health Care Claim Status Notification (005010X212)
+    - 277CA: Claim Acknowledgment - Pre-adjudication rejections (005010X214)
+    - 835: Health Care Claim Payment/Advice (005010X221)
     
     Args:
-        transaction_type: X12 transaction set identifier (e.g., "277", "835")
+        transaction_type: X12 transaction set identifier (e.g., "277", "277CA", "835")
         
     Returns:
         Parser instance for the specified transaction type
@@ -236,6 +252,9 @@ def _get_parser(transaction_type: str):
     if transaction_type == "277":
         # Instantiate parser for claim status notifications
         return X12_277_Parser()
+    elif transaction_type == "277CA":
+        # Instantiate parser for claim acknowledgment (rejections)
+        return X12_277CA_Parser()
     elif transaction_type == "835":
         # Instantiate parser for payment/remittance advice
         return X12_835_Parser()

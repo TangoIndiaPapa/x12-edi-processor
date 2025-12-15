@@ -163,6 +163,9 @@ response.json
 backup_*.x12
 test_manual.py
 
+# Documentation - exclude reference docs starting with X12
+X12*.md
+
 # Terraform
 terraform/.terraform/
 terraform/.terraform.lock.hcl
