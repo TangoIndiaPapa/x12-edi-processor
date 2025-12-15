@@ -40,7 +40,9 @@ def build_lambda_layer():
     Lambda automatically adds python/ to the Python path, making all
     dependencies importable.
     """
-    lambda_dir = Path(__file__).parent
+    # Get project root (parent of scripts directory)
+    project_root = Path(__file__).parent.parent
+    lambda_dir = project_root / "lambda"
     zip_path = lambda_dir / "lambda_layer.zip"
     package_dir = lambda_dir / "package"
     

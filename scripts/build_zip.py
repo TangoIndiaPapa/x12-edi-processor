@@ -42,8 +42,8 @@ def build_lambda_zip():
     provided by the Lambda Layer and do not need to be in this package.
     """
     # Determine paths relative to this script
-    lambda_dir = Path(__file__).parent
-    project_dir = lambda_dir.parent
+    project_dir = Path(__file__).parent.parent
+    lambda_dir = project_dir / "lambda"
     zip_path = lambda_dir / "lambda_function.zip"
     
     # Remove old ZIP to ensure fresh build (avoid stale code issues)
