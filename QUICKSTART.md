@@ -77,8 +77,44 @@ cp .env.example .env
 
 ### 3. Verify Installation
 ```bash
-python main.py
+python scripts/main.py
 ```
+
+## Testing Your Setup
+
+### Run Unit Tests
+```bash
+pytest tests/unit/ -v
+```
+
+### Run All Tests
+```bash
+pytest tests/
+```
+
+### Run Integration Tests (requires test files)
+```bash
+pytest tests/integration/test_simple.py
+```
+
+## Project Organization
+
+The project follows Python best practices:
+
+- **`src/`** - All source code (parsers, handlers, core logic)
+- **`tests/`** - All tests organized by type:
+  - `tests/unit/` - Fast, isolated unit tests
+  - `tests/integration/` - Integration tests with real files
+  - `tests/fixtures/` - Test data files
+  - `tests/debug/` - Debug utilities
+- **`scripts/`** - Build and utility scripts:
+  - `scripts/main.py` - Local testing entry point
+  - `scripts/build_layer.py` - Build Lambda Layer
+  - `scripts/build_zip.py` - Build Lambda function
+- **`lambda/`** - Lambda deployment artifacts
+- **`terraform/`** - Infrastructure as Code
+
+See [PROJECT_REORGANIZATION.md](PROJECT_REORGANIZATION.md) for detailed structure documentation.
 
 ## Basic Usage
 

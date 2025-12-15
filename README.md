@@ -2,15 +2,33 @@
 
 Enterprise-grade X12 EDI (Electronic Data Interchange) processing system for healthcare claims data (277 Claims Status & 835 Payment/Remittance). Supports multiple input/output sources including local filesystem, AWS S3, and HTTP uploads, with AWS Lambda for serverless processing.
 
+## 🆕 Recent Updates (v1.1.0+)
+
+- ✅ **100% PEP8 Compliance** - Zero code style violations
+- ✅ **277CA Parser** - Full support for Claim Acknowledgment with rejection tracking
+- ✅ **Claim Reconciliation Engine** - Revenue integrity analysis and tracking
+- ✅ **Lambda Layers** - Optimized deployment (20 KB code + 20.7 MB dependencies)
+- ✅ **Project Reorganization** - Python best practices directory structure
+- ✅ **Security Hardening** - Removed sensitive data from version control
+- ✅ **HDI Sample Files** - Healthcare Data Insight test files integrated
+- ✅ **Pylint Score: 9.04/10** - High code quality metrics
+
+See [PROJECT_REORGANIZATION.md](PROJECT_REORGANIZATION.md) and [PYTHON_BEST_PRACTICES_REVIEW.md](PYTHON_BEST_PRACTICES_REVIEW.md) for details.
+
 ## Features
 
-- **X12 Format Support**: 277 Claims Status (005010X212) and 835 Payment/Remittance (005010X221A1)
+- **X12 Format Support**: 
+  - 277 Claims Status (005010X212)
+  - 277CA Claim Acknowledgment (with rejection tracking)
+  - 835 Payment/Remittance (005010X221A1)
+- **Claim Reconciliation Engine**: Track claim status changes, identify revenue leakage
 - **Multiple Input Sources**: Local files, AWS S3 buckets, HTTP file uploads
-- **AWS Lambda Processing**: Serverless architecture for scalable EDI processing
+- **AWS Lambda Processing**: Serverless architecture with optimized Lambda Layers
 - **Multiple Output Destinations**: Local filesystem, AWS S3, direct download
 - **Data Validation**: Comprehensive X12 segment and transaction validation
 - **Error Handling**: Robust error handling with detailed logging
 - **Type Safety**: Full type hints and Pydantic models
+- **Code Quality**: PEP8 compliant, Black formatted, 9.04/10 Pylint score
 
 ## Architecture
 
@@ -67,9 +85,9 @@ aws configure
 ## Project Structure
 
 ```
-vscworkspace/
-├── main.py                          # Application entry point
+x12-edi-processor/
 ├── requirements.txt                 # Python dependencies
+├── requirements-dev.txt             # Development dependencies
 ├── .env.example                     # Environment variables template
 ├── .gitignore                       # Git ignore rules
 ├── pytest.ini                       # Pytest configuration
@@ -81,19 +99,15 @@ vscworkspace/
 │   │   ├── __init__.py
 │   │   ├── config.py                # Configuration management
 │   │   ├── exceptions.py            # Custom exceptions
-│   │   └── logging_config.py        # Logging setup
+│   │   ├── logging_config.py        # Logging setup
+│   │   └── reconciliation.py        # Claim reconciliation engine
 │   │
 │   ├── parsers/                     # X12 parsing modules
 │   │   ├── __init__.py
 │   │   ├── base_parser.py           # Base parser interface
 │   │   ├── x12_277_parser.py        # 277 Claims Status parser
-│   │   └── x12_835_parser.py        # 835 Payment parser
-│   │
-│   ├── models/                      # Data models
-│   │   ├── __init__.py
-│   │   ├── x12_277_models.py        # 277 Pydantic models
-│   │   ├── x12_835_models.py        # 835 Pydantic models
-│   │   └── common_models.py         # Shared models
+│   │   ├── x12_277ca_parser.py      # 277CA Claim Acknowledgment parser
+│   │   └── x12_835_parser.py        # 835 Payment/Remittance parser
 │   │
 │   ├── input/                       # Input handlers
 │   │   ├── __init__.py
@@ -102,52 +116,53 @@ vscworkspace/
 │   │   ├── s3_input.py              # AWS S3 input
 │   │   └── upload_input.py          # HTTP upload handler
 │   │
-│   ├── output/                      # Output handlers
-│   │   ├── __init__.py
-│   │   ├── base_output.py           # Base output interface
-│   │   ├── local_output.py          # Local file output
-│   │   ├── s3_output.py             # AWS S3 output
-│   │   └── download_output.py       # HTTP download handler
-│   │
-│   ├── processors/                  # Processing logic
-│   │   ├── __init__.py
-│   │   ├── x12_processor.py         # Main X12 processor
-│   │   └── validator.py             # X12 validation
-│   │
-│   ├── handlers/                    # AWS Lambda handlers
-│   │   ├── __init__.py
-│   │   └── lambda_handler.py        # Lambda entry point
-│   │
-│   └── api/                         # FastAPI endpoints (optional)
+│   └── handlers/                    # AWS Lambda handlers
 │       ├── __init__.py
-│       ├── app.py                   # FastAPI application
-│       └── routes.py                # API routes
+│       └── lambda_handler.py        # Lambda entry point
 │
 ├── tests/                           # Test suite
 │   ├── __init__.py
-│   ├── conftest.py                  # Pytest fixtures
+│   ├── conftest.py                  # Pytest fixtures and configuration
+│   ├── README.md                    # Test organization guide
 │   ├── unit/                        # Unit tests
-│   │   ├── test_parsers.py
-│   │   ├── test_input_handlers.py
-│   │   └── test_output_handlers.py
+│   │   ├── test_parsers.py          # Parser unit tests
+│   │   └── test_input_handlers.py   # Input handler tests
 │   ├── integration/                 # Integration tests
-│   │   └── test_lambda_handler.py
-│   └── fixtures/                    # Test data
-│       ├── sample_277.txt
-│       └── sample_835.txt
+│   │   ├── test_277ca.py            # 277CA integration tests
+│   │   ├── test_hdi_samples.py      # HDI sample file tests
+│   │   ├── test_277_hdi_files.py    # 277 file analysis tests
+│   │   ├── test_manual.py           # Manual verification tests
+│   │   └── test_simple.py           # Simple functionality tests
+│   ├── debug/                       # Debug utilities (not pytest tests)
+│   │   ├── debug_parser.py          # Parser debugging
+│   │   └── debug_277ca.py           # 277CA debugging
+│   └── fixtures/                    # Test data files
+│       ├── 277ca_rejections.x12     # Sample 277CA files
+│       ├── 277_claim_level_status.x12
+│       ├── 835_managed_care.x12     # Sample 835 files
+│       └── hdi_samples/             # Healthcare Data Insight samples
+│
+├── scripts/                         # Build and utility scripts
+│   ├── __init__.py
+│   ├── README.md                    # Scripts documentation
+│   ├── main.py                      # Local testing entry point
+│   ├── build_layer.py               # Build AWS Lambda Layer
+│   ├── build_zip.py                 # Build Lambda function package
+│   ├── build.sh                     # Shell build script
+│   └── compare_277_files.py         # File comparison utility
 │
 ├── lambda/                          # AWS Lambda deployment
 │   ├── template.yaml                # SAM/CloudFormation template
-│   └── build.sh                     # Build script
+│   ├── lambda_function.zip          # Deployment package (20 KB)
+│   ├── lambda_layer.zip             # Dependencies layer (20.7 MB)
+│   └── backup_lambda_handler.py     # Previous handler backup
 │
-├── docs/                            # Documentation
-│   ├── architecture.md              # Architecture overview
-│   ├── x12_formats.md               # X12 format specifications
-│   └── deployment.md                # Deployment guide
-│
-└── scripts/                         # Utility scripts
-    ├── deploy_lambda.sh             # Lambda deployment script
-    └── sample_data_generator.py     # Generate test data
+└── terraform/                       # Infrastructure as Code
+    ├── main.tf                      # Main Terraform config
+    ├── variables.tf                 # Variable definitions
+    ├── outputs.tf                   # Output definitions
+    ├── terraform.tfvars.example     # Example variables
+    └── README.md                    # Terraform documentation
 ```
 
 ## Usage
@@ -155,7 +170,7 @@ vscworkspace/
 ### Local Development
 
 ```bash
-python main.py
+python scripts/main.py
 ```
 
 ### Process X12 File (Local)
@@ -216,7 +231,19 @@ print(json.loads(response['Payload'].read()))
 ### Run All Tests
 
 ```bash
-pytest
+pytest tests/
+```
+
+### Run Unit Tests Only
+
+```bash
+pytest tests/unit/ -v
+```
+
+### Run Integration Tests
+
+```bash
+pytest tests/integration/ -v
 ```
 
 ### Run with Coverage
@@ -225,21 +252,46 @@ pytest
 pytest --cov=src --cov-report=html
 ```
 
-### Run Specific Tests
+### Run Specific Test File
 
 ```bash
 pytest tests/unit/test_parsers.py -v
 ```
 
+See [tests/README.md](tests/README.md) for detailed testing documentation.
+
 ## Deployment
 
-### Deploy to AWS Lambda
+### Build Lambda Layer and Function
+
+```bash
+# Build Lambda Layer (dependencies)
+python scripts/build_layer.py
+
+# Build Lambda Function (code)
+python scripts/build_zip.py
+
+# Or use shell script
+bash scripts/build.sh
+```
+
+### Deploy with Terraform
+
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+### Deploy with AWS SAM (alternative)
 
 ```bash
 cd lambda
-./build.sh
 sam deploy --guided
 ```
+
+See [LAMBDA_LAYER_IMPLEMENTATION.md](LAMBDA_LAYER_IMPLEMENTATION.md) for Lambda Layers architecture details.
 
 ## X12 Format Reference
 
@@ -259,6 +311,23 @@ sam deploy --guided
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+
+## Documentation
+
+- **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide and basic usage
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines and standards
+- **[PROJECT_REORGANIZATION.md](PROJECT_REORGANIZATION.md)** - Project structure details
+- **[PYTHON_BEST_PRACTICES_REVIEW.md](PYTHON_BEST_PRACTICES_REVIEW.md)** - Code quality review
+- **[LAMBDA_LAYER_IMPLEMENTATION.md](LAMBDA_LAYER_IMPLEMENTATION.md)** - Lambda Layers architecture
+- **[tests/README.md](tests/README.md)** - Testing guide and organization
+- **[scripts/README.md](scripts/README.md)** - Build scripts documentation
+- **[terraform/README.md](terraform/README.md)** - Infrastructure as Code guide
+
+## Version History
+
+- **v1.1.0** - PEP8 compliance, code quality improvements
+- **v1.0.0** - 277CA parser and claim reconciliation engine
+- **v0.9.0** - Initial release with 277/835 parsers
 
 ## License
 

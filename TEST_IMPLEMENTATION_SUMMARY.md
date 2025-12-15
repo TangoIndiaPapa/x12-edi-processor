@@ -35,9 +35,14 @@ Create at least 3 fully working and valid X12 test files using chain-of-thought 
 
 ### Step 4: Validate and Integrate
 - Fetched complete X12 files from LinuxForHealth repository
-- Created `tests/fixtures/` directory structure
+- Created `tests/fixtures/` directory structure for test data
 - Updated `conftest.py` to load files properly
 - Fixed parser to handle hierarchical loop structures (list vs dict)
+- Organized tests into:
+  - `tests/unit/` - Unit tests for parsers and handlers
+  - `tests/integration/` - Integration tests with real files
+  - `tests/fixtures/` - Test data files
+  - `tests/debug/` - Debug utilities
 
 ## Results
 
