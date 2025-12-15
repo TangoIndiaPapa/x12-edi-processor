@@ -1,0 +1,6 @@
+{
+  "input_source": "s3",
+  "bucket": "x12-edi-processor-dev-145023137103",
+  "key": "input/test-277ca-rejections.x12",
+  "transaction_type": "277CA"
+}

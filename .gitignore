@@ -166,9 +166,11 @@ venv*/
 .venv*/
 
 # Test outputs and temporary files
+logs/
+!logs/.gitkeep
 output_*.json
-payload.json
-response.json
+payload*.json
+response*.json
 backup_*.x12
 test_manual.py
 
