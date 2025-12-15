@@ -1,18 +1,29 @@
 """AWS Lambda handler for processing X12 EDI documents."""
 
+# Standard library imports
 import json
+from datetime import datetime
 from typing import Any, Dict, Optional
 
+# Third-party imports
+import boto3
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
-from ..core.config import get_settings
-from ..core.exceptions import X12ProcessingError
-from ..input.s3_input import S3Input
-from ..input.local_input import LocalInput
-from ..parsers.x12_277_parser import X12_277_Parser
-from ..parsers.x12_835_parser import X12_835_Parser
+# Application imports - using absolute imports for enterprise standards
+# Absolute imports are preferred over relative imports (PEP 8) for:
+# - Better code clarity and maintainability
+# - Explicit dependency declaration
+# - Improved IDE support and static analysis
+# - Easier refactoring and module relocation
+from src.core.config import get_settings
+from src.core.exceptions import X12ProcessingError
+from src.input.local_input import LocalInput
+from src.input.s3_input import S3Input
+from src.parsers.x12_277_parser import X12_277_Parser
+from src.parsers.x12_835_parser import X12_835_Parser
 
+# Initialize module-level instances
 logger = Logger()
 tracer = Tracer()
 settings = get_settings()
@@ -250,9 +261,6 @@ def _write_output(event: Dict[str, Any], data: Dict[str, Any]) -> str:
         Uses json.dumps with default=str to handle date/datetime objects
         that may be present in parsed X12 data.
     """
-    import boto3
-    from datetime import datetime
-    
     # Determine output destination (default to S3 for Lambda environment)
     output_dest = event.get("output_destination", "s3")
     
