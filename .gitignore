@@ -144,6 +144,7 @@ data/output/*
 samconfig.toml
 # Lambda deployment
 lambda/lambda_function.zip
+lambda/lambda_layer.zip
 lambda/package/
 lambda/verify_*/
 lambda/check_*/

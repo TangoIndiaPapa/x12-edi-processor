@@ -2,18 +2,23 @@
 """
 Build AWS Lambda deployment package for X12 EDI processor.
 
-This script creates a deployment-ready ZIP file containing:
-1. Application source code from src/ directory
-2. Python dependencies from lambda/package/ directory
+**BEST PRACTICE**: This now builds a CODE-ONLY package for use with Lambda Layers.
+Dependencies are deployed separately as a Lambda Layer, which provides:
+- Faster deployments when only code changes (~1-2MB vs ~20MB)
+- Separation of concerns (code vs dependencies)
+- Ability to share dependencies across multiple Lambda functions
+- Reduced deployment time and costs
 
-The script was created to avoid PowerShell Compress-Archive caching issues
-that caused stale code to be deployed.
+This script creates a deployment-ready ZIP file containing ONLY:
+- Application source code from src/ directory
+
+Dependencies are handled by the Lambda Layer (see build_layer.py).
 
 Usage:
     python build_zip.py
     
 Output:
-    lambda_function.zip - Ready for deployment to AWS Lambda
+    lambda_function.zip - Code-only package for AWS Lambda (~1-2MB)
 """
 import os
 import zipfile
@@ -21,18 +26,20 @@ from pathlib import Path
 
 def build_lambda_zip():
     """
-    Build Lambda deployment ZIP file.
+    Build Lambda deployment ZIP file with CODE ONLY.
     
-    Creates a fresh ZIP file by:
-    1. Removing any existing lambda_function.zip
-    2. Adding all source code from src/ with proper structure
-    3. Adding all dependencies from package/ to root of ZIP
-    4. Excluding Python bytecode files (__pycache__, .pyc)
+    **BEST PRACTICE**: Dependencies are deployed as a Lambda Layer separately.
+    This creates a much smaller deployment package (~1-2MB) containing only:
+    - Application source code from src/
     
     The resulting structure allows Lambda to import modules correctly:
     - src/handlers/lambda_handler.py (Lambda handler)
     - src/parsers/ (X12 parsers)
-    - boto3/, linuxforhealth/, etc. (dependencies at root)
+    - src/core/ (configuration and utilities)
+    - src/input/ (input handlers)
+    
+    Dependencies (boto3, linuxforhealth, aws_lambda_powertools, etc.) are
+    provided by the Lambda Layer and do not need to be in this package.
     """
     # Determine paths relative to this script
     lambda_dir = Path(__file__).parent
@@ -63,28 +70,12 @@ def build_lambda_zip():
                 arcname = file_path.relative_to(project_dir)
                 zf.write(file_path, arcname)
                 print(f"Added: {arcname}")
-        
-        # Add Python dependencies from package/ directory
-        # These go to the root of the ZIP so Lambda can import them directly
-        # Structure: boto3/, linuxforhealth/, aws_lambda_powertools/, etc.
-        package_dir = lambda_dir / "package"
-        for root, dirs, files in os.walk(package_dir):
-            # Skip __pycache__ directories in dependencies too
-            dirs[:] = [d for d in dirs if d != '__pycache__']
-            
-            for file in files:
-                # Skip compiled Python files in dependencies
-                if file.endswith('.pyc'):
-                    continue
-                    
-                file_path = Path(root) / file
-                # Place dependencies at root level of ZIP (no package/ prefix)
-                arcname = file_path.relative_to(lambda_dir / "package")
-                zf.write(file_path, arcname)
     
     # Report final package size
     size_mb = zip_path.stat().st_size / (1024 * 1024)
-    print(f"\nCreated {zip_path.name}: {size_mb:.2f} MB")
+    print(f"\nCreated {zip_path.name}: {size_mb:.2f} MB (code only)")
+    print(f"\nNote: This package requires the Lambda Layer with dependencies.")
+    print(f"Build layer with: python build_layer.py")
 
 if __name__ == "__main__":
     build_lambda_zip()

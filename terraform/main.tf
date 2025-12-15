@@ -20,10 +20,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    archive = {
-      source  = "hashicorp/archive"
-      version = "~> 2.4"
-    }
   }
 }
 
@@ -249,31 +245,23 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc_execution" {
 }
 
 # ============================================================================
-# Lambda Function Package
+# Lambda Layer (Best Practice)
 # ============================================================================
 
-# Create deployment package with dependencies
-data "archive_file" "lambda_package" {
-  type        = "zip"
-  source_dir  = "${path.module}/../"
-  output_path = "${path.module}/lambda_function.zip"
-
-  excludes = [
-    ".git",
-    ".github",
-    ".pytest_cache",
-    "__pycache__",
-    "*.pyc",
-    "htmlcov",
-    "venv",
-    "venv312",
-    "tests",
-    "test_*.py",
-    "terraform",
-    ".env",
-    ".coverage",
-    "*.md"
-  ]
+# Lambda Layer for Python dependencies
+# Separates dependencies from application code for:
+# - Faster deployments (code-only package is ~1-2MB vs ~20MB with dependencies)
+# - Better organization and separation of concerns
+# - Ability to share dependencies across multiple Lambda functions
+# - Reduced deployment time and costs
+resource "aws_lambda_layer_version" "dependencies" {
+  filename            = "${path.module}/../lambda/lambda_layer.zip"
+  layer_name          = "${var.project_name}-dependencies-${var.environment}"
+  compatible_runtimes = [var.lambda_runtime]
+  description         = "Python dependencies for X12 EDI processor (boto3, linuxforhealth, aws-lambda-powertools)"
+  
+  # Only recreate layer when dependencies change
+  source_code_hash = filebase64sha256("${path.module}/../lambda/lambda_layer.zip")
 }
 
 # ============================================================================
@@ -281,15 +269,21 @@ data "archive_file" "lambda_package" {
 # ============================================================================
 
 # Main Lambda function for X12 processing
+# Uses Lambda Layer for dependencies (best practice)
+# Uses pre-built code-only package (lambda_function.zip) from build_zip.py
 resource "aws_lambda_function" "x12_processor" {
-  filename         = data.archive_file.lambda_package.output_path
+  filename         = "${path.module}/../lambda/lambda_function.zip"
   function_name    = var.lambda_function_name
   role             = aws_iam_role.lambda_role.arn
   handler          = "src.handlers.lambda_handler.lambda_handler"
-  source_code_hash = data.archive_file.lambda_package.output_base64sha256
+  source_code_hash = filebase64sha256("${path.module}/../lambda/lambda_function.zip")
   runtime          = var.lambda_runtime
   timeout          = var.lambda_timeout
   memory_size      = var.lambda_memory_size
+
+  # Lambda Layer with dependencies (BEST PRACTICE)
+  # Separates code from dependencies for faster deployments
+  layers = [aws_lambda_layer_version.dependencies.arn]
 
   # Environment variables for the Lambda function
   environment {
