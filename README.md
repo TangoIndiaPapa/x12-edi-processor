@@ -18,9 +18,10 @@ See [prompts/PROJECT_REORGANIZATION.md](prompts/PROJECT_REORGANIZATION.md) and [
 ## Features
 
 - **X12 Format Support**: 
-  - 277 Claims Status (005010X212)
-  - 277CA Claim Acknowledgment (with rejection tracking)
-  - 835 Payment/Remittance (005010X221A1)
+  - 277 Claims Status (005010X212) - Single/multiple transaction sets
+  - 277CA Claim Acknowledgment (005010X214) - Multiple claims per transaction
+  - 835 Payment/Remittance (005010X221A1) - Single/multiple transaction sets
+- **Batch Processing**: Supports files with multiple ST/SE transaction sets
 - **Claim Reconciliation Engine**: Track claim status changes, identify revenue leakage
 - **Multiple Input Sources**: Local files, AWS S3 buckets, HTTP file uploads
 - **AWS Lambda Processing**: Serverless architecture with optimized Lambda Layers
@@ -295,18 +296,146 @@ See [prompts/LAMBDA_LAYER_IMPLEMENTATION.md](prompts/LAMBDA_LAYER_IMPLEMENTATION
 
 ## X12 Format Reference
 
-### 277 Claims Status (005010X212)
+### Supported Transaction Types
+
+All parsers support both **single transaction** and **multiple transaction** files:
+
+#### 277 Claims Status (005010X212)
+
+**Structure:** Uses LinuxForHealth library parser
+
+**Input Support:**
+- Single transaction (1 ST/SE segment pair)
+- Multiple transactions (multiple ST/SE pairs in one ISA/IEA envelope)
+
+**Output Structure:**
+```json
+{
+  "transaction_type": "277",
+  "version": "005010X212",
+  "transactions": [           // Array of transaction sets
+    {
+      "control_number": "0001",
+      "information_source": {...},
+      "information_receiver": {...},
+      "service_providers": [...],
+      "claim_status": [...]
+    },
+    // Additional transactions...
+  ]
+}
+```
+
+**Content:**
 - Information Source (Payer)
 - Information Receiver (Provider)
 - Service Provider
 - Claim Status Tracking
 
-### 835 Payment/Remittance (005010X221A1)
-- Financial Information
+#### 835 Payment/Remittance (005010X221A1)
+
+**Structure:** Uses LinuxForHealth library parser
+
+**Input Support:**
+- Single transaction (1 ST/SE segment pair)
+- Multiple transactions (multiple ST/SE pairs in one ISA/IEA envelope)
+
+**Output Structure:**
+```json
+{
+  "transaction_type": "835",
+  "version": "005010X221A1",
+  "transactions": [           // Array of transaction sets
+    {
+      "control_number": "112233",
+      "financial_information": {...},
+      "payer": {...},
+      "payee": {...},
+      "claims": [...],
+      "summary": {...}
+    },
+    // Additional transactions...
+  ]
+}
+```
+
+**Content:**
+- Financial Information (BPR segment)
 - Payer Identification
 - Payee Identification  
 - Claim Payment Information
 - Service Line Adjustments
+
+#### 277CA Claim Acknowledgment (005010X214)
+
+**Structure:** Manual segment parser (LinuxForHealth doesn't support X214)
+
+**Input Support:**
+- Single transaction with multiple claims (multiple HL segments)
+- Each HL level 22 segment represents one claim acknowledgment
+
+**Output Structure:**
+```json
+{
+  "transaction_type": "277CA",
+  "version": "005010X214",
+  "acknowledgments": [        // Array of all claims
+    {
+      "claim_id": "CLAIM001",
+      "status_category": "A7",   // A7=Rejected, A1=Accepted
+      "status_code": "42",
+      "rejection_reason": "AUTHORIZATION NUMBER MISSING",
+      "billed_amount": 2500.00
+    },
+    // Additional claims...
+  ],
+  "rejections": [...],        // Filtered: status_category="A7"
+  "acceptances": [...],       // Filtered: status_category="A1"
+  "summary": {
+    "total_claims": 4,
+    "rejected_count": 3,
+    "accepted_count": 1,
+    "rejection_rate": 75.0
+  }
+}
+```
+
+**Content:**
+- Pre-adjudication acknowledgment/rejection
+- Claim-level status (A7=Rejected, A1=Accepted)
+- Rejection reasons for revenue cycle tracking
+- Cross-reference capability with 835 payments
+
+### Batch Processing Notes
+
+**Multiple ST/SE Segments (277, 835):**
+```
+ISA*...
+GS*...
+  ST*835*001~     ← Transaction 1
+  ...
+  SE*...
+  ST*835*002~     ← Transaction 2
+  ...
+  SE*...
+GE*...
+IEA*...
+```
+Result: Each ST/SE pair becomes one item in `transactions[]` array
+
+**Multiple Claims (277CA):**
+```
+ISA*...
+GS*...
+  ST*277*001~
+  HL*1**22~       ← Claim 1
+  HL*2**22~       ← Claim 2
+  HL*3**22~       ← Claim 3
+  SE*...
+GE*...
+IEA*...
+```
+Result: Each HL level 22 becomes one item in `acknowledgments[]` array
 
 ## Contributing
 
