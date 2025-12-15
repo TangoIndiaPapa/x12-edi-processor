@@ -13,7 +13,7 @@ Enterprise-grade X12 EDI (Electronic Data Interchange) processing system for hea
 - ✅ **HDI Sample Files** - Healthcare Data Insight test files integrated
 - ✅ **Pylint Score: 9.04/10** - High code quality metrics
 
-See [PROJECT_REORGANIZATION.md](PROJECT_REORGANIZATION.md) and [PYTHON_BEST_PRACTICES_REVIEW.md](PYTHON_BEST_PRACTICES_REVIEW.md) for details.
+See [prompts/PROJECT_REORGANIZATION.md](prompts/PROJECT_REORGANIZATION.md) and [prompts/PYTHON_BEST_PRACTICES_REVIEW.md](prompts/PYTHON_BEST_PRACTICES_REVIEW.md) for details.
 
 ## Features
 
@@ -291,7 +291,7 @@ cd lambda
 sam deploy --guided
 ```
 
-See [LAMBDA_LAYER_IMPLEMENTATION.md](LAMBDA_LAYER_IMPLEMENTATION.md) for Lambda Layers architecture details.
+See [prompts/LAMBDA_LAYER_IMPLEMENTATION.md](prompts/LAMBDA_LAYER_IMPLEMENTATION.md) for Lambda Layers architecture details.
 
 ## X12 Format Reference
 
@@ -316,12 +316,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 - **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide and basic usage
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines and standards
-- **[PROJECT_REORGANIZATION.md](PROJECT_REORGANIZATION.md)** - Project structure details
-- **[PYTHON_BEST_PRACTICES_REVIEW.md](PYTHON_BEST_PRACTICES_REVIEW.md)** - Code quality review
-- **[LAMBDA_LAYER_IMPLEMENTATION.md](LAMBDA_LAYER_IMPLEMENTATION.md)** - Lambda Layers architecture
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
 - **[tests/README.md](tests/README.md)** - Testing guide and organization
 - **[scripts/README.md](scripts/README.md)** - Build scripts documentation
 - **[terraform/README.md](terraform/README.md)** - Infrastructure as Code guide
+
+### Internal Documentation (prompts/)
+
+- **[prompts/PROJECT_REORGANIZATION.md](prompts/PROJECT_REORGANIZATION.md)** - Project structure details
+- **[prompts/PYTHON_BEST_PRACTICES_REVIEW.md](prompts/PYTHON_BEST_PRACTICES_REVIEW.md)** - Code quality review
+- **[prompts/LAMBDA_LAYER_IMPLEMENTATION.md](prompts/LAMBDA_LAYER_IMPLEMENTATION.md)** - Lambda Layers architecture
+- **[prompts/README.md](prompts/README.md)** - Internal documentation index
 
 ## Version History
 

@@ -114,7 +114,7 @@ The project follows Python best practices:
 - **`lambda/`** - Lambda deployment artifacts
 - **`terraform/`** - Infrastructure as Code
 
-See [PROJECT_REORGANIZATION.md](PROJECT_REORGANIZATION.md) for detailed structure documentation.
+See [prompts/PROJECT_REORGANIZATION.md](prompts/PROJECT_REORGANIZATION.md) for detailed structure documentation.
 
 ## Basic Usage
 
