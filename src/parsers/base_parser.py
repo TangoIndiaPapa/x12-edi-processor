@@ -18,13 +18,13 @@ class BaseX12Parser(ABC):
     def parse(self, x12_content: str) -> Dict[str, Any]:
         """
         Parse X12 content into structured data.
-        
+
         Args:
             x12_content: Raw X12 EDI content as string
-            
+
         Returns:
             Parsed X12 data as dictionary
-            
+
         Raises:
             X12ParseError: If parsing fails
         """
@@ -34,10 +34,10 @@ class BaseX12Parser(ABC):
     def validate(self, parsed_data: Dict[str, Any]) -> List[str]:
         """
         Validate parsed X12 data.
-        
+
         Args:
             parsed_data: Parsed X12 data dictionary
-            
+
         Returns:
             List of validation error messages (empty if valid)
         """
@@ -46,10 +46,10 @@ class BaseX12Parser(ABC):
     def parse_with_linuxforhealth(self, x12_content: str) -> List[Dict[str, Any]]:
         """
         Parse X12 content using LinuxForHealth library.
-        
+
         Args:
             x12_content: Raw X12 EDI content
-            
+
         Returns:
             List of parsed transaction models
         """
@@ -62,21 +62,21 @@ class BaseX12Parser(ABC):
     def get_transaction_info(self, x12_content: str) -> Dict[str, str]:
         """
         Extract transaction type and version from X12 content.
-        
+
         Args:
             x12_content: Raw X12 EDI content
-            
+
         Returns:
             Dictionary with transaction_code and version
         """
         # Parse ST segment to get transaction type
-        lines = x12_content.split('~')
+        lines = x12_content.split("~")
         for line in lines:
-            if line.strip().startswith('ST'):
-                elements = line.split('*')
+            if line.strip().startswith("ST"):
+                elements = line.split("*")
                 if len(elements) >= 3:
                     return {
-                        'transaction_code': elements[1],
-                        'version': elements[3] if len(elements) > 3 else 'unknown'
+                        "transaction_code": elements[1],
+                        "version": elements[3] if len(elements) > 3 else "unknown",
                     }
-        return {'transaction_code': 'unknown', 'version': 'unknown'}
+        return {"transaction_code": "unknown", "version": "unknown"}

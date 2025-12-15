@@ -33,11 +33,11 @@ from pydantic import BaseSettings
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables.
-    
+
     Uses Pydantic BaseSettings for automatic environment variable loading,
     type validation, and default value assignment. Settings are immutable
     once loaded.
-    
+
     Attributes:
         ENVIRONMENT: Runtime environment identifier
         AWS_REGION: AWS region for service calls
@@ -68,10 +68,10 @@ class Settings(BaseSettings):
     @property
     def max_file_size_bytes(self) -> int:
         """Convert max file size from MB to bytes.
-        
+
         Returns:
             int: Maximum file size in bytes (MB * 1024 * 1024)
-            
+
         Example:
             >>> settings = Settings(MAX_FILE_SIZE_MB=50)
             >>> settings.max_file_size_bytes
@@ -82,17 +82,17 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         """Check if running in production environment.
-        
+
         Returns:
             bool: True if ENVIRONMENT == 'production', False otherwise
-            
+
         Example:
             >>> settings = Settings(ENVIRONMENT='production')
             >>> settings.is_production
             True
         """
         return self.ENVIRONMENT == "production"
-    
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -102,23 +102,22 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance.
-    
+
     Returns a singleton Settings instance using LRU cache. The settings
     object is created once and reused across the application lifecycle.
     This improves performance and ensures consistency.
-    
+
     Returns:
         Settings: Cached application settings instance
-        
+
     Called by:
         - Lambda handlers for AWS configuration
         - Input handlers for validation limits
         - Parsers for processing options
-        
+
     Example:
         >>> settings = get_settings()
         >>> settings.AWS_REGION
         'us-east-1'
     """
     return Settings()
-
